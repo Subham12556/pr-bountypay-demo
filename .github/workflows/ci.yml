@@ -33,4 +33,6 @@ jobs:
       - run: pip install pytest
 
       - name: Run unit tests
+        env:
+          PYTHONPATH: .
         run: python -m pytest -q
