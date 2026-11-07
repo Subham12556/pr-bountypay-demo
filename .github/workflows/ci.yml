@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Block edits to tests or workflows
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          CHANGED=$(git diff --name-only "origin/$BASE" HEAD)
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -E '^(tests/|\.github/)'; then
+            echo "::error::PR modifies protected paths (tests/ or .github/)"
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pytest
+
+      - name: Run unit tests
+        run: python -m pytest -q
